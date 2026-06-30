@@ -1,14 +1,13 @@
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import generateToken from "../utils/generateToken.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 
+// Register user
 export const register = async (req, res) => {
   try {
-    console.log("Body:", req.body);
-
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role } = req.body;
 
     const existingUser = await User.findOne({ email });
-    console.log("Checked existing user");
 
     if (existingUser) {
       return res.status(400).json({
@@ -17,36 +16,35 @@ export const register = async (req, res) => {
       });
     }
 
-    console.log("Creating user...");
-
     const user = await User.create({
       name,
       email,
       password,
       phone,
+      role: role || "patient",
     });
 
-    console.log("User created");
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
 
-    const token = generateToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
 
     res.status(201).json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       user,
     });
   } catch (error) {
-    console.error("REGISTER ERROR:");
-    console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
-      stack: error.stack,
     });
   }
 };
 
+// Login user
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,6 +58,13 @@ export const login = async (req, res) => {
       });
     }
 
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended by an administrator.",
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
@@ -69,12 +74,17 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = refreshToken;
+    await user.save();
 
     res.json({
       success: true,
       message: "Login successful",
-      token,
+      token: accessToken,
+      refreshToken,
       user,
     });
   } catch (error) {
@@ -85,7 +95,62 @@ export const login = async (req, res) => {
   }
 };
 
+// Refresh token rotation
+export const refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required",
+      });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended.",
+      });
+    }
+
+    const newAccessToken = generateAccessToken(user._id);
+    const newRefreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.json({
+      success: true,
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: "Session expired, please login again",
+    });
+  }
+};
+
+// Get profile
 export const profile = async (req, res) => {
+  if (req.user.isSuspended) {
+    return res.status(403).json({
+      success: false,
+      message: "Your account is suspended.",
+    });
+  }
   res.json({
     success: true,
     user: req.user,

@@ -5,12 +5,15 @@ function Input({
   value,
   onChange,
   name,
+  required = false,
 }) {
   return (
-    <div className="mb-5">
-      <label className="block mb-2 font-medium text-gray-700">
-        {label}
-      </label>
+    <div className="mb-5 font-sans">
+      {label && (
+        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          {label}
+        </label>
+      )}
 
       <input
         type={type}
@@ -18,7 +21,8 @@ function Input({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required={required}
+        className="w-full bg-indigo-50/30 border border-indigo-100/80 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
       />
     </div>
   );

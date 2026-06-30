@@ -31,6 +31,15 @@ const userSchema = new mongoose.Schema(
       enum: ["patient", "doctor", "admin"],
       default: "patient",
     },
+
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+
+    refreshToken: {
+      type: String,
+    },
   },
   {
     timestamps: true,

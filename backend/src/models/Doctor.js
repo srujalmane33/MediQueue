@@ -42,6 +42,31 @@ const doctorSchema = new mongoose.Schema(
     about: {
       type: String,
     },
+
+    currentPatients: {
+      type: Number,
+      default: 0,
+    },
+
+    maxPatients: {
+      type: Number,
+      default: 20,
+    },
+
+    rating: {
+      type: Number,
+      default: 4.8,
+    },
+
+    totalReviews: {
+      type: Number,
+      default: 1,
+    },
+
+    timings: {
+      type: [String],
+      default: ["09:00 AM - 12:00 PM", "02:00 PM - 05:00 PM"],
+    },
   },
   {
     timestamps: true,

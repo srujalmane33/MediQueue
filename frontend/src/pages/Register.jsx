@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
 import AuthLayout from "../components/AuthLayout";
 import Input from "../components/Input";
 import Button from "../components/Button";
-
-import { registerUser } from "../services/authService";
+import { register, clearError } from "../store/slices/authSlice";
 
 function Register() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(false);
+  const { loading, isAuthenticated, role } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -19,6 +20,18 @@ function Register() {
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (isAuthenticated && role === "patient") {
+      navigate("/profile");
+    }
+  }, [isAuthenticated, role, navigate]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -30,22 +43,22 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.name || !formData.phone || !formData.email || !formData.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
     try {
-      setLoading(true);
+      const resultAction = await dispatch(register(formData));
 
-      const data = await registerUser(formData);
-
-      localStorage.setItem("token", data.token);
-
-      toast.success("Registration Successful");
-
-      navigate("/profile");
+      if (register.fulfilled.match(resultAction)) {
+        toast.success("Registration Successful");
+        navigate("/profile");
+      } else {
+        toast.error(resultAction.payload || "Registration Failed");
+      }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Registration Failed"
-      );
-    } finally {
-      setLoading(false);
+      toast.error("An error occurred during registration");
     }
   };
 
@@ -60,6 +73,7 @@ function Register() {
           name="name"
           value={formData.name}
           onChange={handleChange}
+          required
         />
 
         <Input
@@ -67,6 +81,7 @@ function Register() {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
+          required
         />
 
         <Input
@@ -75,6 +90,7 @@ function Register() {
           name="email"
           value={formData.email}
           onChange={handleChange}
+          required
         />
 
         <Input
@@ -83,6 +99,7 @@ function Register() {
           name="password"
           value={formData.password}
           onChange={handleChange}
+          required
         />
 
         <Button loading={loading}>
@@ -90,12 +107,11 @@ function Register() {
         </Button>
       </form>
 
-      <p className="text-center mt-5">
+      <p className="text-center mt-5 text-sm text-slate-500">
         Already have an account?
-
         <Link
           to="/login"
-          className="text-blue-600 ml-2"
+          className="text-blue-600 ml-2 font-medium hover:underline"
         >
           Login
         </Link>

@@ -9,10 +9,13 @@ import DoctorRegister from "../pages/DoctorRegister";
 
 import PatientProfile from "../pages/PatientProfile";
 import DoctorProfile from "../pages/DoctorProfile";
+import AdminProfile from "../pages/AdminProfile";
 
 import Doctors from "../pages/Doctors";
 import BookAppointment from "../pages/BookAppointment";
 import MyAppointments from "../pages/MyAppointments";
+
+import ProtectedRoute from "../components/ProtectedRoute";
 
 function AppRoutes() {
   return (
@@ -25,14 +28,59 @@ function AppRoutes() {
       <Route path="/doctor/login" element={<DoctorLogin />} />
       <Route path="/doctor/register" element={<DoctorRegister />} />
 
-      <Route path="/profile" element={<PatientProfile />} />
-      <Route path="/doctor/profile" element={<DoctorProfile />} />
+      {/* Patient Protected Routes */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowedRoles={["patient"]}>
+            <PatientProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/doctors"
+        element={
+          <ProtectedRoute allowedRoles={["patient"]}>
+            <Doctors />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/book"
+        element={
+          <ProtectedRoute allowedRoles={["patient"]}>
+            <BookAppointment />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/appointments"
+        element={
+          <ProtectedRoute allowedRoles={["patient"]}>
+            <MyAppointments />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/doctors" element={<Doctors />} />
+      {/* Doctor Protected Routes */}
+      <Route
+        path="/doctor/profile"
+        element={
+          <ProtectedRoute allowedRoles={["doctor"]}>
+            <DoctorProfile />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/book" element={<BookAppointment />} />
-
-      <Route path="/appointments" element={<MyAppointments />} />
+      {/* Admin Protected Routes */}
+      <Route
+        path="/admin/profile"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminProfile />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
