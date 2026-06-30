@@ -10,6 +10,10 @@ import DoctorRegister from "../pages/DoctorRegister";
 import PatientProfile from "../pages/PatientProfile";
 import DoctorProfile from "../pages/DoctorProfile";
 
+import Doctors from "../pages/Doctors";
+import BookAppointment from "../pages/BookAppointment";
+import MyAppointments from "../pages/MyAppointments";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -23,6 +27,12 @@ function AppRoutes() {
 
       <Route path="/profile" element={<PatientProfile />} />
       <Route path="/doctor/profile" element={<DoctorProfile />} />
+
+      <Route path="/doctors" element={<Doctors />} />
+
+      <Route path="/book" element={<BookAppointment />} />
+
+      <Route path="/appointments" element={<MyAppointments />} />
     </Routes>
   );
 }
